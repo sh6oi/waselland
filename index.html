@@ -231,6 +231,10 @@
             background: #ef4444;
         }
 
+        .toast.warning {
+            background: #f59e0b;
+        }
+
         .toast.active {
             display: block;
             animation: slideDown 0.3s ease;
@@ -365,6 +369,14 @@
             margin-bottom: 1.25rem;
         }
 
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
         .overlay {
             position: fixed;
             top: 0;
@@ -393,13 +405,33 @@
             }
         }
 
-        @media (min-width: 1024px) {
-            .responsive-grid {
-                grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-            padding: 0 1rem;
+        .time-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+            text-align: center;
         }
+
+        .time-info p {
+            margin: 0;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        .time-info .current-time {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+        
+        .work-hours-notice {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
         }
     </style>
     <style>@view-transition { navigation: auto; }</style>
@@ -514,6 +546,10 @@
                 <div id="homeSection" class="section active">
                     <div class="glass-effect rounded-xl shadow-2xl p-4 mb-4">
                         <h2 class="text-2xl font-bold gradient-text mb-4">الصفحة الرئيسية</h2>
+                        <div class="time-info">
+                            <p>⏰ وقت العمل الحالي: <span id="currentTimeDisplay" class="current-time">--:--</span></p>
+                            <p class="text-sm mt-1">وقت العمل: من الساعة 9 صباحاً إلى الساعة 8 مساءً بتوقيت بغداد</p>
+                        </div>
                         <div class="responsive-grid">
                             <div class="stat-card">
                                 <div class="flex items-center justify-between">
@@ -558,6 +594,25 @@
                 <div id="newOrderSection" class="section">
                     <div class="glass-effect rounded-xl shadow-2xl p-4 mb-4">
                         <h2 class="text-2xl font-bold gradient-text mb-4">📦 طلب مندوب جديد</h2>
+                        
+                        <!-- وقت العمل -->
+                        <div class="time-info">
+                            <p>⏰ وقت العمل الحالي: <span id="orderTimeDisplay" class="current-time">--:--</span></p>
+                            <p class="text-sm mt-1">وقت العمل: من الساعة 9 صباحاً إلى الساعة 8 مساءً بتوقيت بغداد</p>
+                        </div>
+                        
+                        <!-- رسالة خارج وقت العمل -->
+                        <div id="outsideWorkHoursMessage" class="work-hours-notice">
+                            <div class="flex items-start gap-2">
+                                <span class="text-xl">ℹ️</span>
+                                <div>
+                                    <p class="font-bold text-amber-900 mb-1 text-sm">يمكنك إرسال الطلب في أي وقت</p>
+                                    <p class="text-xs text-amber-800">إذا كان خارج وقت العمل، سيتم تعليق الطلب تلقائياً وسيتم التعامل معه خلال وقت العمل</p>
+                                    <p class="text-xs text-amber-800 mt-1">ملاحظة: وقت العمل من الساعة 9 صباحاً إلى الساعة 8 مساءً</p>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="info-box">
                             <div class="flex items-start gap-2">
                                 <span class="text-xl">ℹ️</span>
@@ -685,6 +740,7 @@
                         document.getElementById('userNameDisplay').textContent = user.userName;
                         document.getElementById('mobileUserName').textContent = user.userName;
                         updateUserData();
+                        startTimeUpdate(); // بدء تحديث الوقت
                     }
                 }
             } else {
@@ -721,6 +777,7 @@
                 document.getElementById('userNameDisplay').textContent = user.userName;
                 document.getElementById('mobileUserName').textContent = user.userName;
                 updateUserData();
+                startTimeUpdate(); // بدء تحديث الوقت
                 showToast('مرحباً بك ' + user.userName);
             } else {
                 showToast('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
@@ -782,6 +839,11 @@
                 if (window.innerWidth < 768) {
                     toggleSidebar();
                 }
+                
+                // إذا كان القسم هو طلب جديد، تحقق من وقت العمل
+                if (section === 'newOrder') {
+                    checkWorkHours();
+                }
             });
         });
 
@@ -794,6 +856,64 @@
             overlay.classList.toggle('active');
         }
 
+        // تحويل الوقت من 24 ساعة إلى 12 ساعة
+        function convertTo12HourFormat(hour, minute) {
+            let period = 'ص'; // صباحاً
+            let convertedHour = hour;
+            
+            if (hour >= 12) {
+                period = 'م'; // مساءً
+                if (hour > 12) {
+                    convertedHour = hour - 12;
+                }
+            }
+            
+            if (convertedHour === 0) {
+                convertedHour = 12;
+            }
+            
+            return `${convertedHour}:${minute.toString().padStart(2, '0')} ${period}`;
+        }
+
+        // التحقق من وقت العمل
+        function checkWorkHours() {
+            const now = new Date();
+            
+            // الحصول على توقيت بغداد (UTC+3)
+            const baghdadTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+            const currentHour = baghdadTime.getUTCHours();
+            const currentMinutes = baghdadTime.getUTCMinutes();
+            
+            // تحويل الوقت إلى نظام 12 ساعة
+            const timeDisplay = convertTo12HourFormat(currentHour, currentMinutes);
+            
+            // تحديث عرض الوقت في جميع الأقسام
+            document.getElementById('currentTimeDisplay').textContent = timeDisplay;
+            document.getElementById('orderTimeDisplay').textContent = timeDisplay;
+            
+            // التحقق إذا كان الوقت خارج ساعات العمل (9 صباحاً - 8 مساءً)
+            const isOutsideWorkHours = currentHour < 9 || currentHour >= 20;
+            
+            const messageElement = document.getElementById('outsideWorkHoursMessage');
+            
+            if (isOutsideWorkHours) {
+                messageElement.style.display = 'block';
+            } else {
+                messageElement.style.display = 'none';
+            }
+            
+            return !isOutsideWorkHours;
+        }
+
+        // بدء تحديث الوقت كل دقيقة
+        function startTimeUpdate() {
+            // تحديث الوقت فوراً
+            checkWorkHours();
+            
+            // تحديث الوقت كل دقيقة
+            setInterval(checkWorkHours, 60000);
+        }
+
         // Handle New Order
         window.handleNewOrder = async function(event) {
             event.preventDefault();
@@ -801,6 +921,10 @@
             const submitBtn = document.getElementById('newOrderBtn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span> جاري الإرسال...';
+
+            // تحديد حالة الطلب بناءً على وقت العمل
+            const isWorkHours = checkWorkHours();
+            const orderStatus = isWorkHours ? 'بانتظار المندوب' : 'معلق بسبب انتهاء وقت العمل';
 
             const orderData = {
                 type: 'order',
@@ -813,7 +937,7 @@
                 orderAmount: parseFloat(document.getElementById('orderTotalAmount').value),
                 deliveryCost: 0,
                 orderType: document.getElementById('orderType').value,
-                status: 'بانتظار المندوب',
+                status: orderStatus,
                 orderDate: new Date().toISOString(),
                 createdAt: new Date().toISOString()
             };
@@ -822,7 +946,12 @@
                 const dataRef = window.firebaseDB.ref(window.firebaseDB.database, 'adminData');
                 await window.firebaseDB.push(dataRef, orderData);
                 
-                showToast('تم إرسال الطلب بنجاح ✅');
+                if (isWorkHours) {
+                    showToast('تم إرسال الطلب بنجاح ✅');
+                } else {
+                    showToast('تم إرسال الطلب بنجاح ✅ وسيتم التعامل معه خلال وقت العمل', 'warning');
+                }
+                
                 document.getElementById('newOrderForm').reset();
                 document.getElementById('orderUserName').value = currentUser.userName;
                 document.getElementById('orderUserAddress').value = currentUser.address;
@@ -855,7 +984,8 @@
                 'المندوب رضا يتوجه إليك': 'bg-gradient-to-r from-indigo-400 to-purple-400 text-white',
                 'تم التسليم للزبون - أحمد': 'bg-gradient-to-r from-green-400 to-emerald-400 text-white',
                 'تم التسليم للزبون - رضا': 'bg-gradient-to-r from-green-400 to-teal-400 text-white',
-                'راجع': 'bg-gradient-to-r from-red-400 to-pink-400 text-white'
+                'راجع': 'bg-gradient-to-r from-red-400 to-pink-400 text-white',
+                'معلق بسبب انتهاء وقت العمل': 'bg-gradient-to-r from-gray-400 to-gray-600 text-white'
             };
 
             container.innerHTML = userOrders.map(order => `
