@@ -1,627 +1,472 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>واصل لاند</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
-        
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صفحة المستخدم</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+  <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
         body {
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        .gradient-bg {
+            box-sizing: border-box;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        * {
+            box-sizing: border-box;
         }
-        
-        .card-hover {
-            transition: all 0.3s ease;
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
-        
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            padding: 16px;
         }
-        
+
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @media (max-width: 640px) {
+            .login-box {
+                padding: 20px;
+                border-radius: 16px;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-app {
+            display: none;
+            height: 100%;
+        }
+
         .sidebar-item {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
-        
+
         .sidebar-item::before {
             content: '';
             position: absolute;
             top: 0;
-            right: -100%;
-            width: 100%;
+            right: 0;
+            width: 4px;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: right 0.5s;
+            background: white;
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
         }
-        
-        .sidebar-item:hover::before {
-            right: 100%;
-        }
-        
+
         .sidebar-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(-5px);
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(-4px);
         }
-        
+
         .sidebar-item.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-right: 4px solid #fbbf24;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
         }
-        
-        .stats-card {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+
+        .sidebar-item.active::before {
+            transform: scaleY(1);
         }
-        
-        .stats-card.blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .stats-card.green {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        .stats-card.purple {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-        
-        .order-card {
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
-        
-        .order-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
-        
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            display: none;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            background: linear-gradient(to bottom, #ffffff, #f9fafb);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            input, select, textarea {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: #c7d2fe;
+            background: #ffffff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15), 0 4px 12px rgba(99, 102, 241, 0.1);
+            background: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (max-width: 640px) {
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
-        
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            box-shadow: none;
+        }
+
+        .spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* Mobile responsive improvements */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
+        .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 50%;
-            transform: translateX(50%);
-            background: #f56565;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateX(50%) translateY(0);
-        }
-        
-        .toast.success {
-            background: #48bb78;
-        }
-        
-        .toast.error {
-            background: #f56565;
+
+        .info-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
         }
     </style>
-</head>
-<body class="bg-gray-100">
-    <!-- Toast Notification -->
-    <div id="toast" class="toast hidden">
-        <div class="flex items-center">
-            <i id="toastIcon" class="fas fa-info-circle ml-2"></i>
-            <span id="toastMessage"></span>
-        </div>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="toast" class="toast"></div><!-- Login Screen -->
+  <div id="loginScreen" class="login-container">
+   <div class="login-box">
+    <div class="text-center mb-6">
+     <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg"><span class="text-4xl">👤</span>
+     </div>
+     <h1 class="text-2xl font-bold gradient-text mb-1">مرحباً بك</h1>
+     <p class="text-gray-600 text-sm">سجل دخولك للمتابعة</p>
     </div>
-
-    <!-- Login Section -->
-    <div id="loginSection" class="min-h-screen gradient-bg flex items-center justify-center p-4">
-        <div class="glass-effect rounded-2xl p-8 w-full max-w-md animate-fade-in">
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <i class="fas fa-user text-3xl text-indigo-600"></i>
-                </div>
-                <h1 class="text-3xl font-bold text-white mb-2">واصل لاند</h1>
-                <p class="text-white/80">مرحباً بك، يرجى تسجيل الدخول</p>
-            </div>
-            
-            <form id="loginForm" class="space-y-6">
-                <div class="relative">
-                    <i class="fas fa-user absolute right-4 top-4 text-white/60"></i>
-                    <input type="text" id="username" required 
-                           placeholder="اسم المستخدم"
-                           class="w-full pr-12 pl-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
-                </div>
-                
-                <div class="relative">
-                    <i class="fas fa-lock absolute right-4 top-4 text-white/60"></i>
-                    <input type="password" id="password" required 
-                           placeholder="كلمة المرور"
-                           class="w-full pr-12 pl-4 py-4 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent">
-                </div>
-                
-                <button type="submit" 
-                        class="w-full bg-white text-indigo-600 py-4 px-6 rounded-xl hover:bg-white/90 transition-all font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105">
-                    <i class="fas fa-sign-in-alt ml-2"></i>
-                    تسجيل الدخول
-                </button>
-            </form>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+     <div class="mb-4"><label class="block text-sm font-semibold mb-2 text-gray-700">اسم المستخدم</label> <input type="text" id="loginUsername" required placeholder="أدخل اسم المستخدم">
+     </div>
+     <div class="mb-6"><label class="block text-sm font-semibold mb-2 text-gray-700">كلمة المرور</label> <input type="password" id="loginPassword" required placeholder="أدخل كلمة المرور">
+     </div><button type="submit" id="loginBtn" class="btn bg-gradient-to-r from-indigo-600 to-purple-600 text-white w-full shadow-lg"> 🔐 تسجيل الدخول </button>
+    </form>
+   </div>
+  </div><!-- Main App -->
+  <div id="mainApp" class="main-app">
+   <div class="flex flex-col md:flex-row h-full"><!-- Sidebar -->
+    <div class="w-full md:w-64 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 text-white flex-shrink-0 shadow-2xl">
+     <div class="p-4 md:p-6">
+      <div class="mb-6 text-center">
+       <div class="w-16 h-16 bg-white rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg"><span class="text-3xl">👤</span>
+       </div>
+       <h1 id="userNameDisplay" class="text-xl font-bold mb-1 tracking-wide">المستخدم</h1>
+       <p class="text-indigo-200 text-xs">لوحة التحكم الشخصية</p>
+      </div>
+      <nav class="space-y-2">
+       <div class="sidebar-item active px-4 py-3 rounded-lg cursor-pointer" data-section="home">
+        <div class="flex items-center gap-3"><span class="text-2xl">🏠</span>
+         <div>
+          <p class="font-bold text-sm">الصفحة الرئيسية</p>
+          <p class="text-xs text-indigo-200 hidden md:block">نظرة عامة</p>
+         </div>
         </div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="dashboardSection" class="hidden min-h-screen">
-        <!-- Top Navigation -->
-        <nav class="gradient-bg shadow-lg sticky top-0 z-40">
-            <div class="px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4 space-x-reverse">
-                        <button id="menuToggle" onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors">
-                            <i class="fas fa-bars text-xl"></i>
-                        </button>
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-indigo-600"></i>
-                            </div>
-                            <div class="text-white">
-                                <h2 class="font-bold text-lg">واصل لاند</h2>
-                                <p class="text-sm text-white/80" id="welcomeText">مرحباً بك</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center space-x-4 space-x-reverse">
-                        <div class="hidden md:flex items-center space-x-4 space-x-reverse text-white/80">
-                            <div class="text-center">
-                                <div class="text-lg font-bold" id="totalOrdersNav">0</div>
-                                <div class="text-xs">إجمالي الطلبات</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-lg font-bold" id="deliveredOrdersNav">0</div>
-                                <div class="text-xs">طلبات مستلمة</div>
-                            </div>
-                        </div>
-                        <button onclick="logout()" class="p-2 rounded-lg bg-red-500/80 text-white hover:bg-red-600 transition-colors">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Mobile Overlay -->
-        <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-30 lg:hidden" onclick="toggleSidebar()"></div>
-
-        <div class="flex">
-            <!-- Sidebar -->
-            <div id="sidebar" class="sidebar fixed lg:static inset-y-0 right-0 z-40 w-72 gradient-bg shadow-2xl transform translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
-                <div class="p-6 border-b border-white/20">
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                            <i class="fas fa-shopping-cart text-indigo-600 text-xl"></i>
-                        </div>
-                        <div class="text-white">
-                            <h3 class="font-bold text-lg">إدارة الطلبات</h3>
-                            <p class="text-sm text-white/80">لوحة التحكم الشخصية</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <nav class="mt-6 px-4">
-                    <a href="#" onclick="showSection('statistics')" class="sidebar-item flex items-center px-4 py-4 text-white/90 hover:text-white rounded-xl mb-2">
-                        <i class="fas fa-chart-bar text-xl ml-4"></i>
-                        <span class="font-medium">الإحصائيات</span>
-                    </a>
-                    <a href="#" onclick="showSection('addOrder')" class="sidebar-item flex items-center px-4 py-4 text-white/90 hover:text-white rounded-xl mb-2">
-                        <i class="fas fa-plus-circle text-xl ml-4"></i>
-                        <span class="font-medium">إضافة طلب</span>
-                    </a>
-                    <a href="#" onclick="showSection('orders')" class="sidebar-item flex items-center px-4 py-4 text-white/90 hover:text-white rounded-xl mb-2">
-                        <i class="fas fa-list-alt text-xl ml-4"></i>
-                        <span class="font-medium">الطلبات</span>
-                    </a>
-                    <a href="#" onclick="showSection('withdrawals')" class="sidebar-item flex items-center px-4 py-4 text-white/90 hover:text-white rounded-xl mb-2">
-                        <i class="fas fa-money-bill-wave text-xl ml-4"></i>
-                        <span class="font-medium">السحوبات</span>
-                    </a>
-                </nav>
-            </div>
-
-            <!-- Main Content -->
-            <div class="flex-1 lg:mr-72 min-h-screen bg-gray-50">
-                <!-- Statistics Section -->
-                <div id="statisticsSection" class="section-content p-6">
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-2">الإحصائيات</h1>
-                        <p class="text-gray-600">نظرة عامة على طلباتك وأرباحك</p>
-                    </div>
-                    
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="stats-card rounded-2xl p-6 text-white card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-white/80 text-sm font-medium">إجمالي الطلبات</p>
-                                    <p class="text-3xl font-bold" id="totalOrders">0</p>
-                                </div>
-                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-shopping-cart text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="stats-card green rounded-2xl p-6 text-white card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-white/80 text-sm font-medium">طلبات مستلمة</p>
-                                    <p class="text-3xl font-bold" id="deliveredOrders">0</p>
-                                </div>
-                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-check-circle text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="stats-card blue rounded-2xl p-6 text-white card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-white/80 text-sm font-medium">طلبات راجعة</p>
-                                    <p class="text-3xl font-bold" id="returnedOrders">0</p>
-                                </div>
-                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-undo text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="stats-card purple rounded-2xl p-6 text-white card-hover">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-white/80 text-sm font-medium">الأرباح الحالية</p>
-                                    <p class="text-3xl font-bold" id="currentEarnings">0</p>
-                                </div>
-                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-coins text-2xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Withdraw Section -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="fas fa-money-bill-wave text-green-600 ml-3"></i>
-                            سحب الأرباح
-                        </h3>
-                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div>
-                                <p class="text-gray-600">الأرباح المتاحة للسحب:</p>
-                                <p class="text-2xl font-bold text-green-600"><span id="availableEarnings">0</span> دينار</p>
-                            </div>
-                            <button id="withdrawBtn" onclick="withdrawEarnings()" 
-                                    class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
-                                <i class="fas fa-download ml-2"></i>
-                                سحب الأرباح
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Add Order Section -->
-                <div id="addOrderSection" class="section-content hidden p-6">
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-2">إضافة طلب جديد</h1>
-                        <p class="text-gray-600">أضف طلب جديد إلى النظام</p>
-                    </div>
-                    
-                    <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
-                        <form id="orderForm" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-hashtag text-indigo-600 ml-2"></i>
-                                        رقم الطلب
-                                    </label>
-                                    <input type="text" id="orderNumber" readonly 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 cursor-not-allowed">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-money-bill text-green-600 ml-2"></i>
-                                        المبلغ (دينار عراقي) *
-                                    </label>
-                                    <input type="number" id="orderAmount" required min="1500" step="100"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <p class="text-xs text-gray-500 mt-1">الحد الأدنى: 1500 دينار عراقي</p>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                    <i class="fas fa-map-marker-alt text-red-600 ml-2"></i>
-                                    العنوان *
-                                </label>
-                                <textarea id="orderAddress" required rows="3"
-                                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-phone text-blue-600 ml-2"></i>
-                                        الهاتف الأول *
-                                    </label>
-                                    <input type="tel" id="orderPhone1" required 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <i class="fas fa-phone text-blue-600 ml-2"></i>
-                                        الهاتف الثاني
-                                    </label>
-                                    <input type="tel" id="orderPhone2" 
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                </div>
-                            </div>
-                            
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <button type="submit" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-3 px-6 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
-                                    <i class="fas fa-plus ml-2"></i>
-                                    إضافة الطلب
-                                </button>
-                                <button type="button" onclick="document.getElementById('orderForm').reset(); setOrderNumber();" 
-                                        class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-6 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105">
-                                    <i class="fas fa-eraser ml-2"></i>
-                                    مسح الحقول
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Orders Section -->
-                <div id="ordersSection" class="section-content hidden p-6">
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-2">الطلبات</h1>
-                        <p class="text-gray-600">عرض وإدارة طلباتك</p>
-                    </div>
-                    
-                    <!-- Search -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <div class="flex-1 relative">
-                                <i class="fas fa-search absolute right-4 top-3 text-gray-400"></i>
-                                <input type="text" id="searchInput" placeholder="البحث في الطلبات..." 
-                                       class="w-full pr-12 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            </div>
-                            <button onclick="searchOrders()" class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
-                                <i class="fas fa-search ml-2"></i>
-                                بحث
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="ordersContainer" class="space-y-4"></div>
-                    <div id="noOrders" class="hidden text-center py-12">
-                        <div class="text-gray-400 text-6xl mb-4">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <h3 class="text-xl font-medium text-gray-600 mb-2">لا توجد طلبات</h3>
-                        <p class="text-gray-500">لم يتم العثور على أي طلبات</p>
-                    </div>
-                </div>
-
-                <!-- Withdrawals Section -->
-                <div id="withdrawalsSection" class="section-content hidden p-6">
-                    <div class="mb-8">
-                        <h1 class="text-3xl font-bold text-gray-800 mb-2">تاريخ السحوبات</h1>
-                        <p class="text-gray-600">عرض تاريخ عمليات سحب الأرباح</p>
-                    </div>
-                    
-                    <div id="withdrawalHistory" class="space-y-4"></div>
-                    <div id="noWithdrawals" class="hidden text-center py-12">
-                        <div class="text-gray-400 text-6xl mb-4">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        <h3 class="text-xl font-medium text-gray-600 mb-2">لا توجد سحوبات</h3>
-                        <p class="text-gray-500">لم تقم بأي عمليات سحب حتى الآن</p>
-                    </div>
-                </div>
-            </div>
+       </div>
+       <div class="sidebar-item px-4 py-3 rounded-lg cursor-pointer" data-section="newOrder">
+        <div class="flex items-center gap-3"><span class="text-2xl">📦</span>
+         <div>
+          <p class="font-bold text-sm">طلب مندوب</p>
+          <p class="text-xs text-indigo-200 hidden md:block">إنشاء طلب جديد</p>
+         </div>
         </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-edit text-indigo-600 ml-3"></i>
-                    تعديل الطلب
-                </h3>
-            </div>
-            
-            <form id="editForm" class="p-6 space-y-4">
-                <input type="hidden" id="editOrderId">
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">العنوان</label>
-                    <textarea id="editAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الهاتف الأول</label>
-                    <input type="tel" id="editPhone1" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الهاتف الثاني</label>
-                    <input type="tel" id="editPhone2" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ</label>
-                    <input type="number" id="editAmount" min="1500" step="100" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                
-                <div class="flex gap-4 pt-4">
-                    <button type="submit" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all">
-                        حفظ التغييرات
-                    </button>
-                    <button type="button" onclick="closeEditModal()" class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-2 px-4 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all">
-                        إلغاء
-                    </button>
-                </div>
-            </form>
+       </div>
+       <div class="sidebar-item px-4 py-3 rounded-lg cursor-pointer" data-section="myOrders">
+        <div class="flex items-center gap-3"><span class="text-2xl">📋</span>
+         <div>
+          <p class="font-bold text-sm">طلباتي</p>
+          <p class="text-xs text-indigo-200 hidden md:block">متابعة الطلبات</p>
+         </div>
         </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-            <div class="p-6 text-center">
-                <div class="text-4xl mb-4" id="confirmIcon">❓</div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2" id="confirmTitle">تأكيد العملية</h3>
-                <p class="text-gray-600 mb-6" id="confirmMessage">هل أنت متأكد؟</p>
-                
-                <div class="flex gap-4">
-                    <button id="confirmButton" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all">
-                        تأكيد
-                    </button>
-                    <button onclick="closeConfirmModal()" class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-2 px-4 rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all">
-                        إلغاء
-                    </button>
-                </div>
-            </div>
+       </div>
+       <div class="sidebar-item px-4 py-3 rounded-lg cursor-pointer" data-section="withdrawal">
+        <div class="flex items-center gap-3"><span class="text-2xl">💰</span>
+         <div>
+          <p class="font-bold text-sm">طلب سحب أموال</p>
+          <p class="text-xs text-indigo-200 hidden md:block">سحب الرصيد</p>
+         </div>
         </div>
-    </div>
-
-    <!-- Success Modal -->
-    <div id="successModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-            <div class="p-6 text-center">
-                <div class="text-4xl mb-4">✅</div>
-                <h3 class="text-lg font-bold text-gray-800 mb-2">تم بنجاح</h3>
-                <p class="text-gray-600 mb-6" id="successMessage">تمت العملية بنجاح</p>
-                
-                <button onclick="closeSuccessModal()" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all">
-                    موافق
-                </button>
-            </div>
+       </div>
+       <div class="sidebar-item px-4 py-3 rounded-lg cursor-pointer mt-4" onclick="logout()">
+        <div class="flex items-center gap-3"><span class="text-2xl">🚪</span>
+         <div>
+          <p class="font-bold text-sm">تسجيل الخروج</p>
+          <p class="text-xs text-indigo-200 hidden md:block">إنهاء الجلسة</p>
+         </div>
         </div>
-    </div>
-
-    <!-- Order Confirmation Modal -->
-    <div id="orderConfirmationModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-            <div class="p-6 text-center">
-                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-check-circle text-green-600 text-4xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">تم إضافة الطلب بنجاح!</h3>
-                <div class="bg-gray-50 rounded-xl p-4 mb-6 text-right">
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        <div class="font-medium text-gray-700">رقم الطلب:</div>
-                        <div class="text-gray-900" id="confOrderNumber"></div>
-                        
-                        <div class="font-medium text-gray-700">المبلغ:</div>
-                        <div class="text-gray-900" id="confOrderAmount"></div>
-                        
-                        <div class="font-medium text-gray-700">العنوان:</div>
-                        <div class="text-gray-900" id="confOrderAddress"></div>
-                        
-                        <div class="font-medium text-gray-700">الهاتف:</div>
-                        <div class="text-gray-900" id="confOrderPhone"></div>
-                    </div>
-                </div>
-                
-                <div class="flex gap-4">
-                    <button onclick="closeOrderConfirmationModal(); showSection('orders');" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all">
-                        <i class="fas fa-list ml-2"></i>
-                        عرض الطلبات
-                    </button>
-                    <button onclick="closeOrderConfirmationModal(); document.getElementById('orderForm').reset(); setOrderNumber();" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-xl hover:from-green-600 hover:to-green-700 transition-all">
-                        <i class="fas fa-plus ml-2"></i>
-                        طلب جديد
-                    </button>
-                </div>
-            </div>
+       </div>
+      </nav>
+     </div>
+    </div><!-- Main Content -->
+    <div class="flex-1 overflow-auto"><!-- Home Section -->
+     <div id="homeSection" class="section p-4 md:p-6">
+      <div class="glass-effect rounded-xl shadow-2xl p-4 md:p-6 mb-4">
+       <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-4">الصفحة الرئيسية</h2>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="stat-card">
+         <div class="flex items-center justify-between">
+          <div>
+           <p class="text-indigo-200 text-xs mb-1">💰 الرصيد الكلي</p>
+           <p id="totalBalance" class="text-2xl md:text-3xl font-bold">0 د.ع</p>
+          </div><span class="text-4xl md:text-5xl opacity-20">💵</span>
+         </div>
         </div>
+        <div class="stat-card">
+         <div class="flex items-center justify-between">
+          <div>
+           <p class="text-indigo-200 text-xs mb-1">📦 عدد الطلبات</p>
+           <p id="totalOrders" class="text-2xl md:text-3xl font-bold">0</p>
+          </div><span class="text-4xl md:text-5xl opacity-20">📋</span>
+         </div>
+        </div>
+       </div>
+       <div class="card p-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-3">📊 ملخص الحساب</h3>
+        <div class="space-y-2">
+         <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"><span class="text-gray-700 font-semibold">👤 اسم المستخدم:</span> <span id="homeUserName" class="text-gray-900 font-bold">-</span>
+         </div>
+         <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"><span class="text-gray-700 font-semibold">📍 الحي:</span> <span id="homeNeighborhood" class="text-gray-900 font-bold">-</span>
+         </div>
+         <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg text-sm"><span class="text-gray-700 font-semibold">📞 رقم الهاتف:</span> <span id="homePhone" class="text-gray-900 font-bold">-</span>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div><!-- New Order Section -->
+     <div id="newOrderSection" class="section p-4 md:p-6" style="display: none;">
+      <div class="glass-effect rounded-xl shadow-2xl p-4 md:p-6 mb-4">
+       <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-4">📦 طلب مندوب جديد</h2>
+       <div class="info-box">
+        <div class="flex items-start gap-2"><span class="text-xl">ℹ️</span>
+         <div>
+          <p class="font-bold text-amber-900 mb-1 text-sm">ملاحظة هامة حول تكلفة التوصيل:</p>
+          <ul class="text-xs text-amber-800 space-y-1">
+           <li>• إذا كان التوصيل بنفس الصوب: <strong>1500 دينار عراقي</strong></li>
+           <li>• إذا كان التوصيل بين الصوبين: <strong>2500 دينار عراقي</strong></li>
+          </ul>
+         </div>
+        </div>
+       </div>
+       <form id="newOrderForm" onsubmit="handleNewOrder(event)">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">اسم المستخدم</label> <input type="text" id="orderUserName" readonly class="bg-gray-100">
+         </div>
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">عنوان المستخدم</label> <input type="text" id="orderUserAddress" readonly class="bg-gray-100">
+         </div>
+        </div>
+        <div class="mb-4"><label class="block text-xs font-semibold mb-1 text-gray-700">العنوان المرسل إليه</label> <textarea id="orderDeliveryAddress" required rows="2" placeholder="أدخل العنوان الكامل للمرسل إليه"></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">رقم الهاتف الأول للمرسل إليه</label> <input type="tel" id="orderRecipientPhone1" required placeholder="07XXXXXXXXX">
+         </div>
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">رقم الهاتف الثاني للمرسل إليه</label> <input type="tel" id="orderRecipientPhone2" placeholder="07XXXXXXXXX (اختياري)">
+         </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">المبلغ الكلي</label> <input type="number" id="orderTotalAmount" required min="0" placeholder="أدخل المبلغ بالدينار العراقي">
+         </div>
+         <div><label class="block text-xs font-semibold mb-1 text-gray-700">نوع الطلب</label> <input type="text" id="orderType" required placeholder="مثال: طعام، ملابس، إلكترونيات">
+         </div>
+        </div><button type="submit" id="newOrderBtn" class="btn bg-gradient-to-r from-blue-600 to-purple-600 text-white w-full shadow-lg"> 📤 إرسال الطلب </button>
+       </form>
+      </div>
+     </div><!-- My Orders Section -->
+     <div id="myOrdersSection" class="section p-4 md:p-6" style="display: none;">
+      <div class="glass-effect rounded-xl shadow-2xl p-4 md:p-6 mb-4">
+       <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-4">📋 طلباتي</h2>
+       <div id="myOrdersContainer" class="space-y-3"><!-- Orders will be rendered here -->
+       </div>
+      </div>
+     </div><!-- Withdrawal Section -->
+     <div id="withdrawalSection" class="section p-4 md:p-6" style="display: none;">
+      <div class="glass-effect rounded-xl shadow-2xl p-4 md:p-6 mb-4">
+       <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-4">💰 طلب سحب أموال</h2>
+       <div class="card p-6 mb-4 text-center">
+        <p class="text-gray-600 mb-2 text-sm">الرصيد المتاح للسحب</p>
+        <p id="withdrawalBalance" class="text-3xl md:text-4xl font-bold gradient-text mb-4">0 د.ع</p><button onclick="requestWithdrawal()" id="withdrawBtn" class="btn bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg"> 💸 طلب سحب الرصيد </button>
+       </div>
+       <div class="card p-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-3">📜 سجل طلبات السحب</h3>
+        <div id="withdrawalHistory" class="space-y-2"><!-- Withdrawal history will be rendered here -->
+        </div>
+       </div>
+      </div>
+     </div>
     </div>
+   </div>
+  </div>
+  <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-    <script>
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBKh3zoKYEbm7aGNH6GRzA5SQx4DYhM7gc",
             authDomain: "arpon11-a4ead.firebaseapp.com",
@@ -633,731 +478,317 @@
             measurementId: "G-8YJ5394ZP8"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
         let currentUser = null;
-        let userOrders = [];
-        let filteredOrders = [];
-        let userWithdrawals = [];
+        let allData = [];
 
-        // Show toast notification
-        function showToast(message, type = 'error') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-            
-            toastMessage.textContent = message;
-            toast.className = 'toast';
-            
-            if (type === 'success') {
-                toast.classList.add('success');
-                toastIcon.className = 'fas fa-check-circle ml-2';
-            } else {
-                toast.classList.add('error');
-                toastIcon.className = 'fas fa-exclamation-circle ml-2';
+        // Listen to Firebase data
+        const dataRef = ref(database, 'adminData');
+        onValue(dataRef, (snapshot) => {
+            allData = [];
+            const data = snapshot.val();
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    allData.push({ firebaseId: key, ...data[key] });
+                });
             }
             
-            toast.classList.remove('hidden');
-            toast.classList.add('show');
+            // Check for saved login after data is loaded
+            if (!currentUser) {
+                const savedUserId = localStorage.getItem('loggedInUserId');
+                if (savedUserId) {
+                    const user = allData.find(item => item.firebaseId === savedUserId);
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'flex';
+                        document.getElementById('userNameDisplay').textContent = user.userName;
+                        updateUserData();
+                    }
+                }
+            } else {
+                updateUserData();
+            }
+        });
+
+        // Make Firebase functions available globally
+        window.firebaseDB = {
+            database,
+            ref,
+            push,
+            set
+        };
+
+        // Login Handler
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const user = allData.find(item => 
+                item.type === 'user' && 
+                item.userName === username && 
+                item.password === password
+            );
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('loggedInUserId', user.firebaseId);
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                document.getElementById('userNameDisplay').textContent = user.userName;
+                updateUserData();
+                showToast('مرحباً بك ' + user.userName);
+            } else {
+                showToast('اسم المستخدم أو كلمة المرور غير صحيحة', 'error');
+            }
+        }
+
+        // Logout
+        window.logout = function() {
+            currentUser = null;
+            localStorage.removeItem('loggedInUserId');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            showToast('تم تسجيل الخروج بنجاح');
+        }
+
+        // Update User Data
+        function updateUserData() {
+            if (!currentUser) return;
+
+            // Update current user data
+            const updatedUser = allData.find(item => item.firebaseId === currentUser.firebaseId);
+            if (updatedUser) {
+                currentUser = updatedUser;
+            }
+
+            // Update home section
+            const userOrders = allData.filter(item => item.type === 'order' && item.userId === currentUser.firebaseId);
+            document.getElementById('totalBalance').textContent = (currentUser.walletBalance || 0).toLocaleString() + ' د.ع';
+            document.getElementById('totalOrders').textContent = userOrders.length;
+            document.getElementById('homeUserName').textContent = currentUser.userName;
+            document.getElementById('homeNeighborhood').textContent = currentUser.neighborhood;
+            document.getElementById('homePhone').textContent = currentUser.phone1;
+
+            // Update new order form
+            document.getElementById('orderUserName').value = currentUser.userName;
+            document.getElementById('orderUserAddress').value = currentUser.address;
+
+            // Update withdrawal section
+            document.getElementById('withdrawalBalance').textContent = (currentUser.walletBalance || 0).toLocaleString() + ' د.ع';
+
+            // Render sections
+            renderMyOrders();
+            renderWithdrawalHistory();
+        }
+
+        // Navigation
+        document.querySelectorAll('.sidebar-item[data-section]').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                const section = item.dataset.section;
+                
+                document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+                document.getElementById(section + 'Section').style.display = 'block';
+            });
+        });
+
+        // Handle New Order
+        window.handleNewOrder = async function(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('newOrderBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'جاري الإرسال... <span class="spinner"></span>';
+
+            const orderData = {
+                type: 'order',
+                userId: currentUser.firebaseId,
+                userName: currentUser.userName,
+                pickupLocation: currentUser.address,
+                deliveryLocation: document.getElementById('orderDeliveryAddress').value,
+                recipientPhone1: document.getElementById('orderRecipientPhone1').value,
+                recipientPhone2: document.getElementById('orderRecipientPhone2').value,
+                orderAmount: parseFloat(document.getElementById('orderTotalAmount').value),
+                deliveryCost: 0,
+                orderType: document.getElementById('orderType').value,
+                status: 'بانتظار المندوب',
+                orderDate: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const dataRef = window.firebaseDB.ref(window.firebaseDB.database, 'adminData');
+                await window.firebaseDB.push(dataRef, orderData);
+                
+                showToast('تم إرسال الطلب بنجاح ✅');
+                document.getElementById('newOrderForm').reset();
+                document.getElementById('orderUserName').value = currentUser.userName;
+                document.getElementById('orderUserAddress').value = currentUser.address;
+            } catch (error) {
+                showToast('حدث خطأ أثناء إرسال الطلب', 'error');
+                console.error(error);
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '📤 إرسال الطلب';
+        }
+
+        // Render My Orders
+        function renderMyOrders() {
+            const userOrders = allData.filter(item => 
+                item.type === 'order' && item.userId === currentUser.firebaseId
+            ).sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+
+            const container = document.getElementById('myOrdersContainer');
+            
+            if (userOrders.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">لا توجد طلبات حالياً</div>';
+                return;
+            }
+
+            const statusColors = {
+                'بانتظار المندوب': 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white',
+                'تم التسليم للمندوب': 'bg-gradient-to-r from-blue-400 to-cyan-400 text-white',
+                'المندوب أحمد يتوجه إليك': 'bg-gradient-to-r from-purple-400 to-pink-400 text-white',
+                'المندوب رضا يتوجه إليك': 'bg-gradient-to-r from-indigo-400 to-purple-400 text-white',
+                'تم التسليم للزبون - أحمد': 'bg-gradient-to-r from-green-400 to-emerald-400 text-white',
+                'تم التسليم للزبون - رضا': 'bg-gradient-to-r from-green-400 to-teal-400 text-white',
+                'راجع': 'bg-gradient-to-r from-red-400 to-pink-400 text-white'
+            };
+
+            container.innerHTML = userOrders.map(order => `
+                <div class="card p-4 border-r-4 border-indigo-500">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-1">📦 ${order.orderType || 'طلب'}</h3>
+                            <p class="text-xs text-gray-500 flex items-center gap-1">
+                                <span>📅</span>
+                                <span>${new Date(order.orderDate).toLocaleString('ar-IQ')}</span>
+                            </p>
+                        </div>
+                        <span class="status-badge ${statusColors[order.status]}">${order.status}</span>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 mb-3">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="flex items-start gap-1">
+                                <span class="text-base">📍</span>
+                                <div>
+                                    <p class="text-gray-500 text-xs">من</p>
+                                    <p class="font-semibold text-gray-800">${order.pickupLocation}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-1">
+                                <span class="text-base">🎯</span>
+                                <div>
+                                    <p class="text-gray-500 text-xs">إلى</p>
+                                    <p class="font-semibold text-gray-800">${order.deliveryLocation}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-1">
+                                <span class="text-base">💵</span>
+                                <div>
+                                    <p class="text-gray-500 text-xs">المبلغ</p>
+                                    <p class="font-bold text-green-600">${order.orderAmount.toLocaleString()} د.ع</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-1">
+                                <span class="text-base">📞</span>
+                                <div>
+                                    <p class="text-gray-500 text-xs">هاتف المستلم</p>
+                                    <p class="font-semibold text-gray-800">${order.recipientPhone1}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Request Withdrawal
+        window.requestWithdrawal = async function() {
+            if (!currentUser || currentUser.walletBalance <= 0) {
+                showToast('لا يوجد رصيد متاح للسحب', 'error');
+                return;
+            }
+
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            withdrawBtn.disabled = true;
+            withdrawBtn.innerHTML = 'جاري الإرسال... <span class="spinner"></span>';
+
+            const withdrawalData = {
+                type: 'withdrawal',
+                userId: currentUser.firebaseId,
+                userName: currentUser.userName,
+                withdrawAmount: currentUser.walletBalance,
+                withdrawStatus: 'قيد المراجعة',
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const dataRef = window.firebaseDB.ref(window.firebaseDB.database, 'adminData');
+                await window.firebaseDB.push(dataRef, withdrawalData);
+                
+                showToast('تم إرسال طلب السحب بنجاح ✅');
+            } catch (error) {
+                showToast('حدث خطأ أثناء إرسال الطلب', 'error');
+                console.error(error);
+            }
+
+            withdrawBtn.disabled = false;
+            withdrawBtn.innerHTML = '💸 طلب سحب الرصيد';
+        }
+
+        // Render Withdrawal History
+        function renderWithdrawalHistory() {
+            const withdrawals = allData.filter(item => 
+                item.type === 'withdrawal' && item.userId === currentUser.firebaseId
+            ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            const container = document.getElementById('withdrawalHistory');
+            
+            if (withdrawals.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">لا توجد طلبات سحب</div>';
+                return;
+            }
+
+            const statusColors = {
+                'قيد المراجعة': 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white',
+                'تم القبول': 'bg-gradient-to-r from-blue-400 to-cyan-400 text-white',
+                'تم التسليم': 'bg-gradient-to-r from-green-400 to-emerald-400 text-white'
+            };
+
+            container.innerHTML = withdrawals.map(withdrawal => `
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-base text-gray-800">💰 ${withdrawal.withdrawAmount.toLocaleString()} د.ع</p>
+                            <p class="text-xs text-gray-500 mt-1">📅 ${new Date(withdrawal.createdAt).toLocaleString('ar-IQ')}</p>
+                        </div>
+                        <span class="status-badge ${statusColors[withdrawal.withdrawStatus]}">${withdrawal.withdrawStatus}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toast Notification
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} active`;
             
             setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    toast.classList.add('hidden');
-                }, 300);
+                toast.classList.remove('active');
             }, 3000);
         }
-
-        // Check for saved login on page load
-        function checkSavedLogin() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                showDashboard();
-                loadUserOrders();
-                loadUserWithdrawals();
-                setOrderNumber(); // Set initial order number
-            }
-        }
-
-        // Generate unique order number
-        function generateOrderNumber() {
-            return Math.floor(10000000 + Math.random() * 90000000).toString();
-        }
-
-        // Check if order number exists
-        function checkOrderNumberExists(orderNumber) {
-            return database.ref('orders').orderByChild('orderNumber').equalTo(orderNumber).once('value')
-                .then(snapshot => snapshot.exists());
-        }
-
-        // Generate unique order number that doesn't exist
-        async function generateUniqueOrderNumber() {
-            let orderNumber;
-            let exists = true;
-            
-            while (exists) {
-                orderNumber = generateOrderNumber();
-                exists = await checkOrderNumberExists(orderNumber);
-            }
-            
-            return orderNumber;
-        }
-
-        // Set order number when form loads
-        async function setOrderNumber() {
-            const orderNumber = await generateUniqueOrderNumber();
-            document.getElementById('orderNumber').value = orderNumber;
-        }
-
-        // Handle login
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                showToast('يرجى إدخال اسم المستخدم وكلمة المرور');
-                return;
-            }
-            
-            // Check credentials in Firebase
-            database.ref('users').orderByChild('username').equalTo(username).once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        let userFound = false;
-                        snapshot.forEach((childSnapshot) => {
-                            const userData = childSnapshot.val();
-                            if (userData.password === password) {
-                                userFound = true;
-                                currentUser = {
-                                    id: childSnapshot.key,
-                                    username: userData.username,
-                                    address: userData.address || '',
-                                    phone1: userData.phone1 || '',
-                                    phone2: userData.phone2 || ''
-                                };
-                                
-                                // Save login info to localStorage
-                                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                                
-                                showDashboard();
-                                loadUserOrders();
-                                loadUserWithdrawals();
-                                setOrderNumber(); // Set initial order number
-                                return false; // Break the loop
-                            }
-                        });
-                        
-                        if (!userFound) {
-                            showToast('كلمة المرور غير صحيحة');
-                        }
-                    } else {
-                        showToast('اسم المستخدم غير موجود');
-                    }
-                })
-                .catch((error) => {
-                    showToast('حدث خطأ في تسجيل الدخول: ' + error.message);
-                });
-        });
-
-        // Show dashboard
-        function showDashboard() {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('dashboardSection').classList.remove('hidden');
-            document.getElementById('welcomeText').textContent = `مرحباً، ${currentUser.username}`;
-        }
-
-        // Logout function
-        function logout() {
-            localStorage.removeItem('currentUser');
-            currentUser = null;
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('loginForm').reset();
-        }
-
-        // Load user orders
-        function loadUserOrders() {
-            if (!currentUser) return;
-            
-            database.ref('orders').orderByChild('username').equalTo(currentUser.username).on('value', (snapshot) => {
-                userOrders = [];
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const order = {
-                            id: childSnapshot.key,
-                            ...childSnapshot.val()
-                        };
-                        // Hide orders based on status and withdrawal status
-                        // Hide delivered orders that have been withdrawn
-                        // Hide returned orders that have been marked as "تم الإرجاع"
-                        const shouldHide = (order.withdrawnByUser && order.status === 'تم الاستلام من قبل الزبون') || 
-                                         (order.status === 'تم الإرجاع');
-                        
-                        if (!shouldHide) {
-                            userOrders.push(order);
-                        }
-                    });
-                }
-                filteredOrders = [...userOrders];
-                displayOrders();
-                updateStatistics();
-                updateNavStats();
-            });
-        }
-
-        // Update navigation stats
-        function updateNavStats() {
-            const totalOrders = userOrders.length;
-            const deliveredOrders = userOrders.filter(order => order.status === 'تم الاستلام من قبل الزبون').length;
-            
-            document.getElementById('totalOrdersNav').textContent = totalOrders;
-            document.getElementById('deliveredOrdersNav').textContent = deliveredOrders;
-        }
-
-        // Load user withdrawals
-        function loadUserWithdrawals() {
-            if (!currentUser) return;
-            
-            database.ref('withdrawals').orderByChild('username').equalTo(currentUser.username).on('value', (snapshot) => {
-                userWithdrawals = [];
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const withdrawal = {
-                            id: childSnapshot.key,
-                            ...childSnapshot.val()
-                        };
-                        userWithdrawals.push(withdrawal);
-                    });
-                }
-                displayWithdrawals();
-            });
-        }
-
-        // Display withdrawals
-        function displayWithdrawals() {
-            const container = document.getElementById('withdrawalHistory');
-            const noWithdrawals = document.getElementById('noWithdrawals');
-
-            if (userWithdrawals.length === 0) {
-                container.innerHTML = '';
-                noWithdrawals.classList.remove('hidden');
-                return;
-            }
-
-            noWithdrawals.classList.add('hidden');
-            
-            // Sort withdrawals by date (newest first)
-            const sortedWithdrawals = userWithdrawals.sort((a, b) => 
-                new Date(b.dateRequested) - new Date(a.dateRequested)
-            );
-
-            container.innerHTML = sortedWithdrawals.map(withdrawal => {
-                const statusColor = getWithdrawalStatusColor(withdrawal.status);
-                return `
-                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h4 class="font-bold text-gray-900 flex items-center">
-                                <i class="fas fa-receipt text-indigo-600 ml-2"></i>
-                                طلب سحب #${withdrawal.id}
-                            </h4>
-                            <p class="text-sm text-gray-600 mt-1">تاريخ الطلب: ${new Date(withdrawal.dateRequested).toLocaleDateString('ar-EG')}</p>
-                        </div>
-                        <span class="px-4 py-2 rounded-full text-sm font-medium ${statusColor}">
-                            ${withdrawal.status}
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="flex items-center">
-                            <i class="fas fa-money-bill text-green-600 ml-2"></i>
-                            <span class="font-medium text-gray-700">المبلغ:</span>
-                            <span class="text-gray-900 mr-2">${withdrawal.amount.toLocaleString()} دينار</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i class="fas fa-list-ol text-blue-600 ml-2"></i>
-                            <span class="font-medium text-gray-700">عدد الطلبات:</span>
-                            <span class="text-gray-900 mr-2">${withdrawal.ordersCount}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            }).join('');
-        }
-
-        // Get withdrawal status color
-        function getWithdrawalStatusColor(status) {
-            switch(status) {
-                case 'تم الدفع': return 'bg-green-100 text-green-800';
-                case 'مرفوض': return 'bg-red-100 text-red-800';
-                case 'قيد المراجعة': return 'bg-yellow-100 text-yellow-800';
-                default: return 'bg-gray-100 text-gray-800';
-            }
-        }
-
-        // Update statistics - only count delivered orders for earnings
-        function updateStatistics() {
-            const totalOrders = userOrders.length;
-            const deliveredOrders = userOrders.filter(order => order.status === 'تم الاستلام من قبل الزبون').length;
-            const returnedOrders = userOrders.filter(order => order.status === 'راجع').length;
-            
-            // Calculate earnings only from delivered orders with 1500 deduction per order
-            const currentEarnings = userOrders
-                .filter(order => order.status === 'تم الاستلام من قبل الزبون')
-                .reduce((total, order) => {
-                    const orderAmount = parseFloat(order.amount) || 0;
-                    const profit = orderAmount - 1500; // Deduct 1500 from each order
-                    return total + Math.max(profit, 0); // Don't allow negative profits
-                }, 0);
-
-            document.getElementById('totalOrders').textContent = totalOrders;
-            document.getElementById('deliveredOrders').textContent = deliveredOrders;
-            document.getElementById('returnedOrders').textContent = returnedOrders;
-            document.getElementById('currentEarnings').textContent = currentEarnings.toLocaleString();
-            document.getElementById('availableEarnings').textContent = currentEarnings.toLocaleString();
-            
-            // Disable withdraw button if no earnings
-            const withdrawBtn = document.getElementById('withdrawBtn');
-            if (currentEarnings <= 0) {
-                withdrawBtn.disabled = true;
-                withdrawBtn.innerHTML = '<i class="fas fa-ban ml-2"></i>لا توجد أرباح للسحب';
-                withdrawBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                withdrawBtn.disabled = false;
-                withdrawBtn.innerHTML = '<i class="fas fa-download ml-2"></i>سحب الأرباح';
-                withdrawBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // Display orders
-        function displayOrders() {
-            const container = document.getElementById('ordersContainer');
-            const noOrders = document.getElementById('noOrders');
-
-            if (filteredOrders.length === 0) {
-                container.innerHTML = '';
-        noOrders.classList.remove('hidden');
-        return;
-    }
-
-    noOrders.classList.add('hidden');
-    container.innerHTML = filteredOrders.map(order => {
-        // Cannot edit if: delivered, handed to courier, returned, or marked as "تم الإرجاع"
-        const canEdit = order.status !== 'تم الاستلام من قبل الزبون' && 
-                       order.status !== 'تم التسليم للمندوب' && 
-                       order.status !== 'راجع' && 
-                       order.status !== 'تم الإرجاع';
-        
-        return `
-        <div class="order-card bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all animate-fade-in shadow-lg">
-            <div class="flex justify-between items-start mb-4">
-                <div class="flex-1">
-                    <h4 class="font-bold text-lg text-gray-900 flex items-center">
-                        <i class="fas fa-shopping-bag text-indigo-600 ml-3"></i>
-                        طلب #${order.orderNumber || order.id}
-                    </h4>
-                    <p class="text-gray-600 flex items-center mt-1">
-                        <i class="fas fa-calendar text-gray-400 ml-2"></i>
-                        تاريخ الإضافة: ${order.dateAdded ? new Date(order.dateAdded).toLocaleDateString('en-GB') : 'غير محدد'}
-                    </p>
-                </div>
-                <div class="flex space-x-2 space-x-reverse">
-                    ${canEdit ? `
-                        <button onclick="editOrder('${order.id}')" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 text-sm transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
-                            <i class="fas fa-edit ml-1"></i>
-                            تعديل
-                        </button>
-                        <button onclick="deleteOrder('${order.id}')" class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 text-sm transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
-                            <i class="fas fa-trash ml-1"></i>
-                            حذف
-                        </button>
-                    ` : `
-                        <span class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm">
-                            <i class="fas fa-lock ml-1"></i>
-                            لا يمكن التعديل
-                        </span>
-                    `}
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-4">
-                <div class="flex items-center">
-                    <i class="fas fa-map-marker-alt text-red-600 ml-2"></i>
-                    <span class="font-medium text-gray-700">العنوان:</span>
-                    <span class="text-gray-900 mr-2">${order.address || 'غير محدد'}</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-phone text-blue-600 ml-2"></i>
-                    <span class="font-medium text-gray-700">الهاتف الأول:</span>
-                    <span class="text-gray-900 mr-2">${order.phone1 || 'غير محدد'}</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-phone text-blue-600 ml-2"></i>
-                    <span class="font-medium text-gray-700">الهاتف الثاني:</span>
-                    <span class="text-gray-900 mr-2">${order.phone2 || 'غير محدد'}</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-money-bill text-green-600 ml-2"></i>
-                    <span class="font-medium text-gray-700">المبلغ:</span>
-                    <span class="text-gray-900 mr-2">${order.amount || '0'} دينار</span>
-                </div>
-            </div>
-            <div class="flex items-center justify-between">
-                <span class="font-medium text-gray-700 flex items-center">
-                    <i class="fas fa-info-circle text-gray-600 ml-2"></i>
-                    الحالة:
-                </span>
-                <div class="flex items-center">
-                    <span class="px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(order.status)} shadow-sm border">
-                        ${getStatusIcon(order.status)} ${order.status || 'بانتظار المندوب'}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `;
-    }).join('');
-}
-
-// Get status color
-function getStatusColor(status) {
-    switch(status) {
-        case 'تم الاستلام من قبل الزبون': return 'bg-green-100 text-green-800 border-green-200';
-        case 'تم التسليم للمندوب': return 'bg-blue-100 text-blue-800 border-blue-200';
-        case 'راجع': return 'bg-red-100 text-red-800 border-red-200';
-        case 'تم الإرجاع': return 'bg-gray-100 text-gray-800 border-gray-200';
-        default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    }
-}
-
-// Get status icon
-function getStatusIcon(status) {
-    switch(status) {
-        case 'تم الاستلام من قبل الزبون': return '✅';
-        case 'تم التسليم للمندوب': return '🚚';
-        case 'راجع': return '↩️';
-        case 'تم الإرجاع': return '🔄';
-        default: return '⏳';
-    }
-}
-
-// Show/Hide sections
-function showSection(section) {
-    // Hide all sections
-    document.querySelectorAll('.section-content').forEach(el => {
-        el.classList.add('hidden');
-    });
-    
-    // Remove active class from all sidebar items
-    document.querySelectorAll('.sidebar-item').forEach(el => {
-        el.classList.remove('active');
-    });
-    
-    // Show selected section
-    document.getElementById(section + 'Section').classList.remove('hidden');
-    
-    // Add active class to clicked sidebar item
-    event.target.closest('.sidebar-item').classList.add('active');
-
-    // Hide sidebar on mobile after selection
-    if (window.innerWidth < 1024) {
-        toggleSidebar();
-    }
-}
-
-// Toggle sidebar for mobile
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    
-    if (sidebar.classList.contains('translate-x-full')) {
-        sidebar.classList.remove('translate-x-full');
-        sidebar.classList.add('show');
-        overlay.classList.remove('hidden');
-    } else {
-        sidebar.classList.add('translate-x-full');
-        sidebar.classList.remove('show');
-        overlay.classList.add('hidden');
-    }
-}
-
-// Search orders
-function searchOrders() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    
-    if (!searchTerm) {
-        filteredOrders = [...userOrders];
-    } else {
-        filteredOrders = userOrders.filter(order => 
-            (order.address && order.address.toLowerCase().includes(searchTerm)) ||
-            (order.phone1 && order.phone1.includes(searchTerm)) ||
-            (order.phone2 && order.phone2.includes(searchTerm)) ||
-            (order.orderNumber && order.orderNumber.includes(searchTerm)) ||
-            (order.id && order.id.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    displayOrders();
-}
-
-// Show order confirmation modal
-function showOrderConfirmationModal(orderData) {
-    document.getElementById('confOrderNumber').textContent = orderData.orderNumber;
-    document.getElementById('confOrderAmount').textContent = orderData.amount + ' دينار';
-    document.getElementById('confOrderAddress').textContent = orderData.address;
-    document.getElementById('confOrderPhone').textContent = orderData.phone1 + (orderData.phone2 ? ' / ' + orderData.phone2 : '');
-    
-    document.getElementById('orderConfirmationModal').classList.remove('hidden');
-    document.getElementById('orderConfirmationModal').classList.add('flex');
-}
-
-// Close order confirmation modal
-function closeOrderConfirmationModal() {
-    document.getElementById('orderConfirmationModal').classList.add('hidden');
-    document.getElementById('orderConfirmationModal').classList.remove('flex');
-}
-
-// Handle add order form
-document.getElementById('orderForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        showToast('يرجى تسجيل الدخول أولاً');
-        return;
-    }
-
-    // Get form values
-    const address = document.getElementById('orderAddress').value.trim();
-    const phone1 = document.getElementById('orderPhone1').value.trim();
-    const phone2 = document.getElementById('orderPhone2').value.trim();
-    const amount = parseFloat(document.getElementById('orderAmount').value);
-    const orderNumber = document.getElementById('orderNumber').value;
-
-    // Validate required fields
-    if (!address || !phone1 || !amount || !orderNumber) {
-        showToast('يرجى ملء جميع الحقول المطلوبة (العنوان، الهاتف الأول، المبلغ)');
-        return;
-    }
-
-    // Validate amount (must be >= 1500)
-    if (amount < 1500) {
-        showToast('يجب أن يكون مبلغ الطلب 1500 دينار عراقي أو أكثر');
-        return;
-    }
-    
-    const newOrder = {
-        username: currentUser.username,
-        orderNumber: orderNumber,
-        address: address,
-        phone1: phone1,
-        phone2: phone2,
-        amount: amount,
-        status: 'بانتظار المندوب',
-        dateAdded: new Date().toISOString()
-    };
-
-    database.ref('orders').push(newOrder)
-        .then(() => {
-            // Show confirmation modal with order details
-            showOrderConfirmationModal(newOrder);
-            
-            // Reset form and generate new order number
-            document.getElementById('orderForm').reset();
-            setOrderNumber();
-        })
-        .catch((error) => {
-            showToast('حدث خطأ في إضافة الطلب: ' + error.message);
-        });
-});
-
-// Edit order
-function editOrder(orderId) {
-    const order = userOrders.find(o => o.id === orderId);
-    if (!order) return;
-
-    document.getElementById('editOrderId').value = orderId;
-    document.getElementById('editAddress').value = order.address || '';
-    document.getElementById('editPhone1').value = order.phone1 || '';
-    document.getElementById('editPhone2').value = order.phone2 || '';
-    document.getElementById('editAmount').value = order.amount || '';
-
-    document.getElementById('editModal').classList.remove('hidden');
-    document.getElementById('editModal').classList.add('flex');
-}
-
-// Close edit modal
-function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    document.getElementById('editModal').classList.remove('flex');
-}
-
-// Delete order
-function deleteOrder(orderId) {
-    showConfirmModal(
-        'حذف الطلب',
-        'هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
-        '🗑️',
-        function() {
-            database.ref('orders/' + orderId).remove()
-                .then(() => {
-                    closeConfirmModal();
-                    showSuccessModal('تم حذف الطلب بنجاح! ✅');
-                })
-                .catch((error) => {
-                    closeConfirmModal();
-                    showToast('حدث خطأ في حذف الطلب: ' + error.message);
-                });
-        }
-    );
-}
-
-// Handle edit form submission
-document.getElementById('editForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const orderId = document.getElementById('editOrderId').value;
-    const amount = parseFloat(document.getElementById('editAmount').value);
-
-    // Validate amount (must be >= 1500)
-    if (amount < 1500) {
-        showToast('يجب أن يكون مبلغ الطلب 1500 دينار عراقي أو أكثر');
-        return;
-    }
-
-    const updatedOrder = {
-        address: document.getElementById('editAddress').value,
-        phone1: document.getElementById('editPhone1').value,
-        phone2: document.getElementById('editPhone2').value,
-        amount: amount
-    };
-
-    database.ref('orders/' + orderId).update(updatedOrder)
-        .then(() => {
-            closeEditModal();
-            showSuccessModal('تم تحديث الطلب بنجاح! ✅');
-        })
-        .catch((error) => {
-            showToast('حدث خطأ في تحديث الطلب: ' + error.message);
-        });
-});
-
-// Show confirmation modal
-function showConfirmModal(title, message, icon, onConfirm) {
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    document.getElementById('confirmIcon').textContent = icon;
-    document.getElementById('confirmButton').onclick = onConfirm;
-    document.getElementById('confirmModal').classList.remove('hidden');
-    document.getElementById('confirmModal').classList.add('flex');
-}
-
-// Close confirmation modal
-function closeConfirmModal() {
-    document.getElementById('confirmModal').classList.add('hidden');
-    document.getElementById('confirmModal').classList.remove('flex');
-}
-
-// Show success modal
-function showSuccessModal(message) {
-    document.getElementById('successMessage').textContent = message;
-    document.getElementById('successModal').classList.remove('hidden');
-    document.getElementById('successModal').classList.add('flex');
-}
-
-// Close success modal
-function closeSuccessModal() {
-    document.getElementById('successModal').classList.add('hidden');
-    document.getElementById('successModal').classList.remove('flex');
-}
-
-// Withdraw earnings
-function withdrawEarnings() {
-    if (!currentUser) return;
-    
-    const deliveredOrders = userOrders.filter(order => order.status === 'تم الاستلام من قبل الزبون');
-    const totalEarnings = deliveredOrders.reduce((total, order) => {
-        const orderAmount = parseFloat(order.amount) || 0;
-        const profit = orderAmount - 1500; // Deduct 1500 from each order
-        return total + Math.max(profit, 0); // Don't allow negative profits
-    }, 0);
-    
-    if (totalEarnings <= 0) {
-        showConfirmModal(
-            'لا توجد أرباح للسحب',
-            'لا توجد أرباح متاحة للسحب في الوقت الحالي. يجب أن يكون لديك طلبات مستلمة لتتمكن من سحب الأرباح.',
-            '💰',
-            closeConfirmModal
-        );
-        return;
-    }
-    
-    showConfirmModal(
-        'تأكيد سحب الأرباح',
-        `هل أنت متأكد من سحب ${totalEarnings.toLocaleString()} دينار؟\n\nسيتم حذف جميع الطلبات المستلمة (${deliveredOrders.length} طلب) وتصفير الأرباح الحالية. هذا الإجراء لا يمكن التراجع عنه.`,
-        '💰',
-        function() {
-            closeConfirmModal();
-            processWithdrawal(totalEarnings, deliveredOrders);
-        }
-    );
-}
-
-// Process withdrawal
-function processWithdrawal(totalEarnings, deliveredOrders) {
-    // Create withdrawal request
-    const withdrawalRequest = {
-        username: currentUser.username,
-        amount: totalEarnings,
-        ordersCount: deliveredOrders.length,
-        status: 'قيد المراجعة',
-        dateRequested: new Date().toISOString()
-    };
-    
-    // Add withdrawal request to database
-    database.ref('withdrawals').push(withdrawalRequest)
-        .then(() => {
-            // Mark only delivered orders as withdrawn (hide from user but keep in database for admin)
-            // Returned orders remain visible until admin changes status to "تم الإرجاع"
-            const updatePromises = deliveredOrders.map(order => 
-                database.ref('orders/' + order.id).update({
-                    withdrawnByUser: true,
-                    withdrawnDate: new Date().toISOString()
-                })
-            );
-            
-            return Promise.all(updatePromises);
-        })
-        .then(() => {
-            showSuccessModal(
-                `تم إرسال طلب السحب بنجاح! 🎉\n\nالمبلغ: ${totalEarnings.toLocaleString()} دينار\nعدد الطلبات: ${deliveredOrders.length}\n\nسيتم مراجعة طلبك من قبل الإدارة وستحصل على إشعار عند الموافقة أو الرفض.`
-            );
-        })
-        .catch((error) => {
-            showConfirmModal(
-                'خطأ في العملية',
-                'حدث خطأ في عملية السحب: ' + error.message,
-                '❌',
-                closeConfirmModal
-            );
-        });
-}
-
-// Handle search on Enter key
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchOrders();
-    }
-});
-
-// Initialize the application
-checkSavedLogin();
-
-// Show statistics section by default
-setTimeout(() => {
-    showSection('statistics');
-}, 100);
-</script>
-</body>
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99d8438731a9d602',t:'MTc2Mjk3MzkzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
